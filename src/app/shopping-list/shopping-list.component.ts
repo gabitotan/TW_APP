@@ -1,23 +1,34 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Ingredient } from '../shared/ingredient.model';
+import { ShoppingListService } from './shopping-list.service';
+import { Subscription } from 'rxjs';
+
 
 @Component({
   selector: 'app-shopping-list',
   templateUrl: './shopping-list.component.html',
   styleUrls: ['./shopping-list.component.css']
 })
-export class ShoppingListComponent implements OnInit {
-  ingredients: Ingredient[] = [
-    new Ingredient('Apples', 5),
-    new Ingredient('Tomatoes', 10)
-  ];
+export class ShoppingListComponent implements OnInit, OnDestroy {
+  ingredients: Ingredient[];
+  private igChangeSub: Subscription;
 
-  constructor() { }
+  constructor(private slService: ShoppingListService) { }
 
   ngOnInit() {
+    this.ingredients = this.slService.getIngredients();
+    this.igChangeSub = this.slService.ingrChanged.subscribe(
+      (ingredients: Ingredient[]) => {
+        this.ingredients = ingredients;
+      }
+    );
   }
 
-  onIngredientAdded(ingredient: Ingredient){
-    this.ingredients.push(ingredient);
+  onEditItem(index: number){
+    this.slService.startedEditing.next(index);
+  }
+
+  ngOnDestroy(): void{
+    this.igChangeSub.unsubscribe();
   }
 }
